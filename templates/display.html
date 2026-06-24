@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}
+Display
+{% endblock title %}
+
+{% block body %}
+<style>
+  .display-page {
+    padding: 40px 16px;
+  }
+
+  .display-page h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 0.25rem;
+  }
+
+  .display-page .subtitle {
+    color: #888888;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
+  .display-row {
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .display-row img {
+    width: 100%;
+    border-radius: 8px;
+    max-height: 400px;
+    object-fit: contain;
+  }
+
+  .img-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #aaaaaa;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.6rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .meta-text {
+    font-size: 0.85rem;
+    color: #888888;
+    margin: 0;
+  }
+
+  .meta-text span {
+    color: #cccccc;
+  }
+</style>
+<div class="container display-page">
+  <h2>Result</h2>
+  <div class="result-row">
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <img src="{{ url_for('static', filename='images/' + original) }}" alt="Original image">
+        <p class="img-label">Original</p>
+      </div>
+      <div class="col-12 col-md-6">
+        <img src="{{ url_for('static', filename='images/' + segmented) }}" alt="Output image">
+        <p class="img-label">Output</p>
+        <p class="meta-text">Inference time: <span>{{ time_taken }}</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock body %}
