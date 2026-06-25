@@ -1,4 +1,18 @@
 from services import yolo,dlv3
 
-MODELS={"Yolo":yolo.segment,
-        "DeepLabV3":dlv3.segment}
+MODELS = {
+    "YOLO": {
+        "task": "Segmentation",
+        "function": yolo.segment
+    },
+
+    "DeepLabV3": {
+        "task": "Segmentation",
+        "function": dlv3.segment
+    },
+
+    "Yolo-Detection": {
+        "task": "Detection",
+        "function": yolo.detect
+    }
+}

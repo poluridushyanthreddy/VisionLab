@@ -35,6 +35,10 @@ class IVPlatform(db.Model):
 def index():
     return render_template('index.html')
 
+@segapp.route('/detection')
+def detection():
+    return render_template('detection.html')
+
 # Display page
 @segapp.route('/display/<original>/<path:segmented>/<time_taken>')
 def display(original, segmented,time_taken):
@@ -55,9 +59,9 @@ def upload():
 
         if extension not in extensions:return "Unsupported File Format"
         filepath,filename=file_upload.upload(file,segapp.config['UPLOAD_FOLDER'])
-        segmented_filename,time_taken=MODELS[model](filepath,segapp.config['UPLOAD_FOLDER'])
+        segmented_filename,time_taken=MODELS[model]["function"](filepath,segapp.config['UPLOAD_FOLDER'])
 
-        task=IVPlatform(model_cat="Segmentation",
+        task=IVPlatform(model_cat=MODELS[model]["task"],
                         model_name=model,
                         original=filename,
                         segmented=segmented_filename,
