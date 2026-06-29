@@ -3,130 +3,53 @@
 {% block title %}Results{% endblock title %}
 
 {% block body %}
-<style>
-  .results-page {
-    padding: 40px 16px;
-  }
 
-  .results-page h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #ffffff;
-    margin-bottom: 0.25rem;
-  }
-
-  .results-page .subtitle {
-    color: #888888;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-
-  .result-row {
-    background: #1a1a1a;
-    border: 1px solid #2a2a2a;
-    border-radius: 12px;
-    padding: 1.25rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .result-row img {
-    width: 100%;
-    border-radius: 8px;
-  }
-
-  .img-label {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #aaaaaa;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 0.6rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .meta-text {
-    font-size: 0.85rem;
-    color: #888888;
-    margin: 0;
-  }
-
-  .meta-text span {
-    color: #cccccc;
-  }
-
-  .row-index {
-    font-size: 0.8rem;
-    color: #555555;
-    margin-bottom: 0.75rem;
-  }
-
-  .btn-delete {
-    background: transparent;
-    border: 1px solid #3a3a3a;
-    color: #888888;
-    border-radius: 6px;
-    padding: 0.3rem 0.75rem;
-    font-size: 0.8rem;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-    text-decoration: none;
-  }
-
-  .btn-delete:hover {
-    border-color: #6e0505;
-    color: #cc3333;
-  }
-
-  .empty-state {
-    padding: 60px 0;
-    color: #555555;
-    font-size: 0.95rem;
-  }
-
-  .empty-state a {
-    color: #aaaaaa;
-    text-decoration: none;
-  }
-
-  .empty-state a:hover {
-    color: #ffffff;
-  }
-</style>
-
-<div class="container results-page">
+<div class="container page-section">
   <h2>Results</h2>
   <p class="subtitle">Your past inference runs.</p>
-
+  
+  <div class="filter-bar">
+    <label for="categoryFilter">Filter by</label>
+    <form method="GET" action="/results" id="filterForm">
+      <select name="category" id="categoryFilter" class="filter-select"
+        onchange="document.getElementById('filterForm').submit()">
+        <option value="" {%if not request.args.get('category') %}selected{% endif %}>All</option>
+        <option value="Segmentation" {% if request.args.get('category')=='Segmentation' %}selected{% endif %}>Segmentation</option>
+        <option value="Detection" {% if request.args.get('category')=='Detection' %}selected{% endif %}>Detection
+        </option>
+      </select>
+    </form>
+  </div>
   {% if allresults|length == 0 %}
 
-    <div class="empty-state text-center">
-      <p>No results yet. <a href="/">Run your first analysis →</a></p>
-    </div>
+  <div class="empty-state text-center">
+    <p>No results yet. <a href="/">Run your first analysis →</a></p>
+  </div>
 
   {% else %}
 
-    {% for x in allresults %}
-    <div class="result-row">
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="row-index"># {{ loop.index }}</span>
-        <a href="/delete/{{ x.id }}" class="btn-delete">Delete</a>
-      </div>
+  {% for x in allresults %}
+  <div class="card-row">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="row-index"># {{ loop.index }}</span>
+      <a href="/delete/{{ x.id }}" class="btn-delete">Delete</a>
+    </div>
 
-      <div class="row g-3">
-        <div class="col-12 col-md-6">
-          <img src="{{ url_for('static', filename='images/' + x.original) }}" alt="Original image">
-          <p class="img-label">Original</p>
-          <p class="meta-text">Task: <span>{{ x.model_cat }}</span></p>
-          <p class="meta-text">Model: <span>{{ x.model_name }}</span></p>
-        </div>
-        <div class="col-12 col-md-6">
-          <img src="{{ url_for('static', filename='images/predictions/' + x.segmented) }}" alt="Output image">
-          <p class="img-label">Output</p>
-          <p class="meta-text">Inference time: <span>{{ x.inf_time }}</span></p>
-        </div>
+    <div class="row g-3">
+      <div class="col-12 col-md-6">
+        <img src="{{ url_for('static', filename='images/' + x.original) }}" alt="Original image">
+        <p class="img-label">Original</p>
+        <p class="meta-text">Task: <span>{{ x.model_cat }}</span></p>
+        <p class="meta-text">Model: <span>{{ x.model_name }}</span></p>
+      </div>
+      <div class="col-12 col-md-6">
+        <img src="{{ url_for('static', filename='images/predictions/' + x.segmented) }}" alt="Output image">
+        <p class="img-label">Output</p>
+        <p class="meta-text">Inference time: <span>{{ x.inf_time }}</span></p>
       </div>
     </div>
-    {% endfor %}
+  </div>
+  {% endfor %}
 
   {% endif %}
 </div>

@@ -81,7 +81,11 @@ def delete(id):
 
 @segapp.route('/results')
 def result():
-    allresults=IVPlatform.query.order_by(IVPlatform.date_created.desc()).all()#learn't this in sqlbolt tutorial
+    category=request.args.get("category")
+    if category:
+        allresults=IVPlatform.query.filter_by(model_cat=category).order_by(IVPlatform.date_created.desc()).all()
+    else:
+        allresults=IVPlatform.query.order_by(IVPlatform.date_created.desc()).all()
     return render_template('results.html',allresults=allresults)
 
 if __name__ == "__main__":
