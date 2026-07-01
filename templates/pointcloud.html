@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}{{title}}{% endblock title %}
+
+{% block body %}
+<div class="hero">
+  <h1>{{title}}</h1>
+  <p>Extract point clouds of individual objects in an image using Segmentation.</p>
+  <div class="upload-card">
+    <form id="pointcloudForm" action="/pointcloud" method="POST" enctype="multipart/form-data">
+      <label for="model-select">Model</label>
+      <select class="vl-select" id="model-select" name="model" required>
+        <option value="" selected disabled>Select a model…</option>
+        {% for value, name in models.items() %}
+        <option value="{{ value }}">{{ name }}</option>
+        {% endfor %}
+      </select>
+      <label for="rgbInput">RGB Image</label>
+      <div class="upload-zone" id="rgbZone">
+        <input type="file" id="rgbInput" name="image" accept="image/*" required>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+          <polyline points="16 12 12 8 8 12" />
+          <line x1="12" y1="8" x2="12" y2="20" />
+        </svg>
+        <p class="upload-zone-title">Drop RGB image or click to browse</p>
+        <p class="upload-zone-sub">PNG, JPG, WEBP — up to 10 MB</p>
+        <p class="file-name" id="rgbFileName"></p>
+      </div>
+
+      <label for="depthInput">Depth Image</label>
+      <div class="upload-zone" id="depthZone">
+        <input type="file" id="depthInput" name="depth_image" accept="image/*" required>
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
+          <polyline points="16 12 12 8 8 12" />
+          <line x1="12" y1="8" x2="12" y2="20" />
+        </svg>
+        <p class="upload-zone-title">Drop depth image or click to browse</p>
+        <p class="upload-zone-sub">PNG, JPG, WEBP — up to 10 MB</p>
+        <p class="file-name" id="depthFileName"></p>
+      </div>
+
+      <button type="submit" class="vl-btn" id="submitBtn">Generate Point Cloud</button>
+    </form>
+
+    <div class="spinner-wrapper" id="spinner">
+      <div class="spinner-border spinner-border-sm" role="status"></div>
+      <span>Processing…</span>
+    </div>
+</div>
+<div class="results-hint">
+    <a href="/results">View past results →</a>
+  </div>
+</div>
+
+<script>
+  function bindZone(inputId, zoneId, fileNameId) {
+    const input = document.getElementById(inputId);
+    const zone = document.getElementById(zoneId);
+    const label = document.getElementById(fileNameId);
+    input.addEventListener('change', () => {
+      const name = input.files?.[0]?.name;
+      if (name) {
+        label.textContent = name;
+        label.style.display = 'block';
+        zone.classList.add('has-file');
+      }
+    });
+  }
+
+  bindZone('rgbInput', 'rgbZone', 'rgbFileName');
+  bindZone('depthInput', 'depthZone', 'depthFileName');
+
+  document.getElementById('pointcloudForm').addEventListener('submit', () => {
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('spinner').style.display = 'flex';
+  });
+</script>
+
+{% endblock body %}

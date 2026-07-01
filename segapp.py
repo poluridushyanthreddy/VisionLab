@@ -31,13 +31,26 @@ class IVPlatform(db.Model):
         return '<Entry %r>' % self.id
 
 # Home page
-@segapp.route('/')
+@segapp.route("/")
 def index():
-    return render_template('index.html')
+    return render_template("index.html")
+
+@segapp.route('/Segmentation')
+def segmentation():
+    return render_template('task.html',title="Segmentation",
+    models={"YOLO": "Yolo",
+    "DeepLabV3": "DeeplabV3"})
+
+@segapp.route('/pointcloud')
+def pointcloud():
+    return render_template('pointcloud.html',title="PointCloud",
+    models={"YOLO": "Yolo",
+    "DeepLabV3": "DeeplabV3"})
 
 @segapp.route('/detection')
 def detection():
-    return render_template('detection.html')
+    return render_template('task.html',title="Detection",
+    models={"Yolo-Detection": "Yolo"})
 
 # Display page
 @segapp.route('/display/<original>/<path:segmented>/<time_taken>')
