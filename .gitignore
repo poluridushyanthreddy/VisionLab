@@ -15,7 +15,7 @@ __pycache__/
 
 # Uploaded/generated images
 static/images/
-
+static/pointclouds
 # Model weights
 *.pt
 *.pth

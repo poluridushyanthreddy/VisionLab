@@ -31,21 +31,6 @@
         <p class="file-name" id="fileName"></p>
       </div>
 
-      <div id="depthZoneWrapper" style="display:none">
-        <label>Depth Image</label>
-        <div class="upload-zone" id="depthDropZone">
-          <input type="file" id="depthInput" name="depth_image" accept="image/*">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" />
-            <polyline points="16 12 12 8 8 12" />
-            <line x1="12" y1="8" x2="12" y2="20" />
-          </svg>
-          <p class="upload-zone-title">Drop depth image or click to browse</p>
-          <p class="upload-zone-sub">PNG, JPG, WEBP — up to 10 MB</p>
-          <p class="file-name" id="depthFileName"></p>
-        </div>
-      </div>
-
       <button type="submit" class="vl-btn" id="submitBtn">Run</button>
     </form>
 
@@ -74,31 +59,6 @@
       fileName.textContent = name;
       fileName.style.display = 'block';
       dropZone.classList.add('has-file');
-    }
-  });
-
-  form.addEventListener('submit', () => {
-    submitBtn.disabled = true;
-    spinner.style.display = 'flex';
-  });
-  const modelSelect = document.getElementById('{model-select}');
-  const depthZoneWrapper = document.getElementById('depthZoneWrapper');
-  const depthInput = document.getElementById('depthInput');
-  const depthFileName = document.getElementById('depthFileName');
-  const depthDropZone = document.getElementById('depthDropZone');
-
-  modelSelect.addEventListener('change', () => {
-    const isPointCloud = modelSelect.value === 'point-cloud';
-    depthZoneWrapper.style.display = isPointCloud ? 'block' : 'none';
-    depthInput.required = isPointCloud;
-  });
-
-  depthInput.addEventListener('change', () => {
-    const name = depthInput.files?.[0]?.name;
-    if (name) {
-      depthFileName.textContent = name;
-      depthFileName.style.display = 'block';
-      depthDropZone.classList.add('has-file');
     }
   });
 </script>

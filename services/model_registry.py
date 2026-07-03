@@ -14,5 +14,9 @@ MODELS = {
     "Yolo-Detection": {
         "task": "Detection",
         "function": yolo.detect
+    },
+    "PointCloud": {
+        "task": "PointCloud",
+        "function": yolo.pointcloud
     }
 }

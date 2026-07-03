@@ -8,8 +8,7 @@ def upload(file,folder):
     file.save(filepath)
     return filepath,filename
 
-def delete(filename1,filename2,folder):
+def delete(filename1,folder):
     filepath=os.path.join(folder,filename1)
     os.remove(filepath)
-    filepath=os.path.join(folder,'predictions',filename2)
-    os.remove(filepath)
+    

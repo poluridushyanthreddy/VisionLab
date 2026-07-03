@@ -24,7 +24,9 @@ class IVPlatform(db.Model):
     model_cat= db.Column(db.String(50), nullable=False)
     model_name= db.Column(db.String(50), nullable=False)
     original=db.Column(db.String(200),nullable=False)
-    segmented=db.Column(db.String(200),nullable=False)
+    depth=db.Column(db.String(200),nullable=True)
+    output=db.Column(db.String(200),nullable=False)
+    folder=db.Column(db.String(200),nullable=True)
     inf_time= db.Column(db.String(50), nullable=False)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     def __repr__(self):
@@ -44,8 +46,7 @@ def segmentation():
 @segapp.route('/pointcloud')
 def pointcloud():
     return render_template('pointcloud.html',title="PointCloud",
-    models={"YOLO": "Yolo",
-    "DeepLabV3": "DeeplabV3"})
+    models={"PointCloud": "Yolo",})
 
 @segapp.route('/detection')
 def detection():
@@ -53,10 +54,10 @@ def detection():
     models={"Yolo-Detection": "Yolo"})
 
 # Display page
-@segapp.route('/display/<original>/<path:segmented>/<time_taken>')
-def display(original, segmented,time_taken):
+@segapp.route('/display/<original>/<path:output>/<time_taken>')
+def display(original, output,time_taken):
 
-    return render_template('display.html',original=original,segmented=segmented,time_taken=time_taken)
+    return render_template('display.html',original=original,output=output,time_taken=time_taken)
 
 # Upload route
 @segapp.route('/upload', methods=['GET', 'POST'])
@@ -72,22 +73,53 @@ def upload():
 
         if extension not in extensions:return "Unsupported File Format"
         filepath,filename=file_upload.upload(file,segapp.config['UPLOAD_FOLDER'])
-        segmented_filename,time_taken=MODELS[model]["function"](filepath,segapp.config['UPLOAD_FOLDER'])
-
+        output_filename,time_taken=MODELS[model]["function"](filepath,segapp.config['UPLOAD_FOLDER'])
         task=IVPlatform(model_cat=MODELS[model]["task"],
                         model_name=model,
                         original=filename,
-                        segmented=segmented_filename,
+                        output=output_filename,
                         inf_time=time_taken)
         db.session.add(task)
         db.session.commit()
+        return redirect(url_for('display',original=filename,output=f'predictions/{output_filename}',time_taken=time_taken))
 
-        return redirect(url_for('display',original=filename,segmented=f'predictions/{segmented_filename}',time_taken=time_taken))
+@segapp.route('/cloudupload',methods=['GET', 'POST'])
+def cloud():
+    if request.method=='POST':
+        model=request.form.get("model")
+        if model not in MODELS: return "Invalid Model"
+        file1 = request.files['image']
+        file2 = request.files['depth_image']
+        if file1.filename == ''or file2.filename=='':
+           return " Image not selected"
+        extension1=os.path.splitext(file1.filename)[1]
+        extension2=os.path.splitext(file1.filename)[1]
+        for i in [extension2,extension1]:
+            if i not in extensions:return "Unsupported File Format"
+        filepath2,filename2=file_upload.upload(file2,segapp.config['UPLOAD_FOLDER'])
+        filepath1,filename1=file_upload.upload(file1,segapp.config['UPLOAD_FOLDER'])
+        output_filename,time_taken,folder= MODELS[model]["function"](filepath1,filepath2,segapp.config['UPLOAD_FOLDER'])
+        task=IVPlatform(model_cat=MODELS[model]["task"],
+                            model_name=model,
+                            depth=filename2,
+                            original=filename1,
+                            output=output_filename,
+                            inf_time=time_taken,folder=folder)
+        db.session.add(task)
+        db.session.commit()
+        return redirect(url_for('display',original=filename1,output=f'predictions/{output_filename}',time_taken=time_taken))
+    
 
 @segapp.route('/delete/<int:id>')
 def delete(id):
     res_delete=IVPlatform.query.filter_by(id=id).first_or_404()
-    file_upload.delete(res_delete.original,res_delete.segmented,segapp.config['UPLOAD_FOLDER'])
+    if res_delete.depth:
+        file_upload.delete(res_delete.depth,segapp.config['UPLOAD_FOLDER'])
+
+    file_upload.delete(res_delete.original,segapp.config['UPLOAD_FOLDER'])
+    folder=os.path.join(segapp.config['UPLOAD_FOLDER'],'predictions')
+    file_upload.delete(res_delete.output,folder)
+
     db.session.delete(res_delete)
     db.session.commit()
     return redirect('/results')
