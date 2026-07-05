@@ -1,5 +1,5 @@
 from werkzeug.utils import secure_filename
-import uuid,os
+import uuid,os,shutil
 def upload(file,folder):
 
     filename = secure_filename(file.filename)
@@ -11,4 +11,9 @@ def upload(file,folder):
 def delete(filename1,folder):
     filepath=os.path.join(folder,filename1)
     os.remove(filepath)
+
+def deletefolder(directory,foldername):
+    filepath=os.path.join(directory,'pointclouds',foldername)
+    shutil.rmtree(filepath)
+    
     

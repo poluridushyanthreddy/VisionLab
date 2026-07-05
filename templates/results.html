@@ -7,15 +7,17 @@
 <div class="container page-section">
   <h2>Results</h2>
   <p class="subtitle">Your past inference runs.</p>
-  
+
   <div class="filter-bar">
     <label for="categoryFilter">Filter by</label>
     <form method="GET" action="/results" id="filterForm">
       <select name="category" id="categoryFilter" class="filter-select"
         onchange="document.getElementById('filterForm').submit()">
         <option value="" {%if not request.args.get('category') %}selected{% endif %}>All</option>
-        <option value="Segmentation" {% if request.args.get('category')=='Segmentation' %}selected{% endif %}>Segmentation</option>
+        <option value="Segmentation" {% if request.args.get('category')=='Segmentation' %}selected{% endif %}>
+          Segmentation</option>
         <option value="Detection" {% if request.args.get('category')=='Detection' %}selected{% endif %}>Detection
+        <option value="PointCloud" {% if request.args.get('category')=='PointCloud' %}selected{% endif %}>PointCloud
         </option>
       </select>
     </form>
@@ -32,12 +34,17 @@
   <div class="card-row">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <span class="row-index"># {{ loop.index }}</span>
-      <a href="/delete/{{ x.id }}" class="btn-delete">Delete</a>
+      <div class="d-flex gap-2">
+        {% if x.model_cat == 'PointCloud' %}
+        <a href="/objectviewer/{{ x.id }}" class="btn-delete btn-action">View</a>
+        {% endif %}
+        <a href="/delete/{{ x.id }}" class="btn-delete">Delete</a>
+      </div>
     </div>
 
     <div class="row g-3">
       <div class="col-12 col-md-6">
-        <img src="{{ url_for('static', filename='images/' + x.original) }}" alt="Original image">
+        <img src="{{ url_for('static', filename='images/original/' + x.original) }}" alt="Original image">
         <p class="img-label">Original</p>
         <p class="meta-text">Task: <span>{{ x.model_cat }}</span></p>
         <p class="meta-text">Model: <span>{{ x.model_name }}</span></p>

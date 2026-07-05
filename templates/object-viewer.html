@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+{% block title %}Point Clouds{% endblock title %}
+
+{% block body %}
+<style>
+    .pc-layout {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        height: calc(100vh - 57px);
+        overflow: hidden;
+    }
+
+    .pc-sidebar {
+        background: #141414;
+        border-right: 1px solid #2a2a2a;
+        overflow-y: auto;
+        padding: 1rem 0;
+    }
+
+    .pc-sidebar-header {
+        padding: 0 1rem 0.75rem;
+        border-bottom: 1px solid #2a2a2a;
+        margin-bottom: 0.5rem;
+    }
+
+    .pc-item {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #1f1f1f;
+    }
+
+    .pc-item.active {
+        background: #1a1a1a;
+        border-left: 2px solid #5ba3d9;
+    }
+
+    .pc-item-name {
+        font-size: 0.82rem;
+        color: #cccccc;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .pc-viewer {
+        background: #040000;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #threeCanvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: none;
+    }
+
+    .viewer-hint {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        font-size: 0.72rem;
+        color: #444444;
+        display: none;
+    }
+</style>
+
+<div class="pc-layout">
+
+    <div class="pc-sidebar">
+        <div class="pc-sidebar-header">
+            <p class="section-label mb-0">Point Clouds</p>
+        </div>
+
+        {% if files %}
+        {% for file in files %}
+        <div class="pc-item">
+            <p class="pc-item-name">{{ file.name }}</p>
+            <div class="d-flex gap-2">
+                <button onclick="loadCloud('{{ file.url }}', this.closest('.pc-item'))"
+                    class="btn-delete btn-action">View</button>
+                <a href="/deleteptcloud/{{ file.url }}/{{id}}" class="btn-delete">Delete</a>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state text-center">
+            <p>No objects detected or point clouds deleted. <a href="/pointcloud">Generate some →</a></p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="pc-viewer" id="viewerContainer">
+        <p class="meta-text" id="viewerEmpty">Select a point cloud to visualise</p>
+        <canvas id="threeCanvas"></canvas>
+        <p class="viewer-hint" id="viewerHint">Scroll to zoom · Drag to orbit · Right-drag to pan</p>
+    </div>
+
+</div>
+
+<script src="https://unpkg.com/three@0.134.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/loaders/PLYLoader.js"></script>
+<script src="https://unpkg.com/three@0.134.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+    const canvas = document.getElementById('threeCanvas');
+    const container = document.getElementById('viewerContainer');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setClearColor(0x0d0d0d);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, 1, 0.001, 100);
+    camera.position.set(0, 0, 1);
+
+    const controls = new THREE.OrbitControls(camera, canvas);
+    controls.enableDamping = true;
+
+    var currentMesh = null;
+
+    function resize() {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        renderer.setSize(w, h, false);
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+    }
+
+    window.addEventListener('resize', resize);
+
+    (function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    })();
+
+    window.loadCloud = function (url, el) {
+        document.querySelectorAll('.pc-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('viewerEmpty').style.display = 'none';
+        document.getElementById('viewerHint').style.display = 'block';
+        canvas.style.display = 'block';
+        resize();
+
+        if (currentMesh) { scene.remove(currentMesh); currentMesh.geometry.dispose(); }
+
+        new THREE.PLYLoader().load(url, (geometry) => {
+            geometry.computeVertexNormals();
+            geometry.computeBoundingSphere();
+            const radius = geometry.boundingSphere.radius;
+
+            currentMesh = new THREE.Points(geometry, new THREE.PointsMaterial({
+                size: radius * 0.01,   // scale point size to cloud size
+                vertexColors: true
+            }));
+            scene.add(currentMesh);
+
+            const center = geometry.boundingSphere.center;
+            controls.target.copy(center);
+            camera.position.copy(center).add(new THREE.Vector3(0, 0, radius * 2.5));
+            camera.near = radius * 0.01;
+            camera.far = radius * 100;
+            camera.updateProjectionMatrix();
+            controls.update();
+        }, undefined, (err) => {
+            console.error('PLY load error:', err);
+            document.getElementById('viewerEmpty').textContent = 'Failed to load point cloud.';
+            document.getElementById('viewerEmpty').style.display = 'block';
+            canvas.style.display = 'none';
+        });
+    };
+</script>
+
+{% endblock body %}

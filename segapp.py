@@ -9,15 +9,16 @@ segapp = Flask(__name__)
 segapp.config['SQLALCHEMY_DATABASE_URI']='sqlite:///test.db'#database of type sqlite
 db=SQLAlchemy(segapp)
 # Upload folder
-segapp.config['UPLOAD_FOLDER'] = os.path.join(segapp.root_path,'static','images')
+segapp.config['UPLOAD_FOLDER'] = os.path.join(segapp.root_path,'static')
+upload_folder=segapp.config['UPLOAD_FOLDER']
 
 #Supported image formats
 extensions={'.avif','.jpeg','.webp','.png', '.jpg', '.bmp', '.jpeg2000', '.dng', '.tiff', '.heif', '.mpo', '.jp2', '.tif', '.heic'}
-
+st_folders=['images','images/predictions','images/original','images/depth','pointclouds']
 # Create folders if not present
-os.makedirs(segapp.config['UPLOAD_FOLDER'], exist_ok=True)
-prediction_folder = os.path.join(segapp.config['UPLOAD_FOLDER'],'predictions')
-os.makedirs(prediction_folder, exist_ok=True)
+for i in st_folders:
+    folder = os.path.join(upload_folder,i)
+    os.makedirs(folder, exist_ok=True)
 
 class IVPlatform(db.Model):
     id=db.Column(db.Integer,primary_key=True)
@@ -72,8 +73,8 @@ def upload():
         extension=os.path.splitext(file.filename)[1]
 
         if extension not in extensions:return "Unsupported File Format"
-        filepath,filename=file_upload.upload(file,segapp.config['UPLOAD_FOLDER'])
-        output_filename,time_taken=MODELS[model]["function"](filepath,segapp.config['UPLOAD_FOLDER'])
+        filepath,filename=file_upload.upload(file,os.path.join(upload_folder,'images','original'))
+        output_filename,time_taken=MODELS[model]["function"](filepath,os.path.join(upload_folder,'images'))
         task=IVPlatform(model_cat=MODELS[model]["task"],
                         model_name=model,
                         original=filename,
@@ -81,7 +82,7 @@ def upload():
                         inf_time=time_taken)
         db.session.add(task)
         db.session.commit()
-        return redirect(url_for('display',original=filename,output=f'predictions/{output_filename}',time_taken=time_taken))
+        return redirect(url_for('display',original=filename,output=output_filename,time_taken=time_taken))
 
 @segapp.route('/cloudupload',methods=['GET', 'POST'])
 def cloud():
@@ -96,9 +97,9 @@ def cloud():
         extension2=os.path.splitext(file1.filename)[1]
         for i in [extension2,extension1]:
             if i not in extensions:return "Unsupported File Format"
-        filepath2,filename2=file_upload.upload(file2,segapp.config['UPLOAD_FOLDER'])
-        filepath1,filename1=file_upload.upload(file1,segapp.config['UPLOAD_FOLDER'])
-        output_filename,time_taken,folder= MODELS[model]["function"](filepath1,filepath2,segapp.config['UPLOAD_FOLDER'])
+        filepath2,filename2=file_upload.upload(file2,os.path.join(upload_folder,'images','depth'))
+        filepath1,filename1=file_upload.upload(file1,os.path.join(upload_folder,'images','original'))
+        output_filename,time_taken,folder= MODELS[model]["function"](filepath1,filepath2,os.path.join(upload_folder,'images'))
         task=IVPlatform(model_cat=MODELS[model]["task"],
                             model_name=model,
                             depth=filename2,
@@ -107,22 +108,27 @@ def cloud():
                             inf_time=time_taken,folder=folder)
         db.session.add(task)
         db.session.commit()
-        return redirect(url_for('display',original=filename1,output=f'predictions/{output_filename}',time_taken=time_taken))
+        return redirect(url_for('display',original=filename1,output=output_filename,time_taken=time_taken))
     
 
 @segapp.route('/delete/<int:id>')
 def delete(id):
     res_delete=IVPlatform.query.filter_by(id=id).first_or_404()
     if res_delete.depth:
-        file_upload.delete(res_delete.depth,segapp.config['UPLOAD_FOLDER'])
+        file_upload.delete(res_delete.depth,os.path.join(upload_folder,'images','depth'))
+        file_upload.deletefolder(upload_folder,res_delete.folder)
 
-    file_upload.delete(res_delete.original,segapp.config['UPLOAD_FOLDER'])
-    folder=os.path.join(segapp.config['UPLOAD_FOLDER'],'predictions')
-    file_upload.delete(res_delete.output,folder)
+    file_upload.delete(res_delete.original,os.path.join(upload_folder,'images','original'))
+    file_upload.delete(res_delete.output,os.path.join(upload_folder,'images','predictions'))
 
     db.session.delete(res_delete)
     db.session.commit()
     return redirect('/results')
+
+@segapp.route('/deleteptcloud/<path:url>/<int:id>')
+def deleteptcloud(url,id):
+    file_upload.delete(url,segapp.root_path)
+    return redirect(f'/objectviewer/{id}')
 
 @segapp.route('/results')
 def result():
@@ -133,5 +139,18 @@ def result():
         allresults=IVPlatform.query.order_by(IVPlatform.date_created.desc()).all()
     return render_template('results.html',allresults=allresults)
 
-if __name__ == "__main__":
+@segapp.route('/objectviewer/<int:id>')
+def viewer(id):
+    task=IVPlatform.query.get_or_404(id)
+    folder=os.path.join(upload_folder,'pointclouds',task.folder)
+    pointclouds = []
+    
+    for file in sorted(os.listdir(folder)):
+        if file.endswith(".ply"):
+            pointclouds.append({
+                "name": file,
+                "url": f"/static/pointclouds/{task.folder}/{file}"    })
+    return render_template('object-viewer.html',files=pointclouds,id=id)
+
+if __name__ == "__main__":    
     segapp.run(debug=True)

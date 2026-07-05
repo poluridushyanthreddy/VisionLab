@@ -7,11 +7,11 @@
   <div class="card-row">
     <div class="row g-3">
       <div class="col-12 col-md-6">
-        <img src="{{ url_for('static', filename='images/' + original) }}" alt="Original image">
+        <img src="{{ url_for('static', filename='images/original/' + original) }}" alt="Original image">
         <p class="img-label">Original</p>
       </div>
       <div class="col-12 col-md-6">
-        <img src="{{ url_for('static', filename='images/' + output) }}" alt="Output image">
+        <img src="{{ url_for('static', filename='images/predictions/' + output) }}" alt="Output image">
         <p class="img-label">Output</p>
         <p class="meta-text">Inference time: <span>{{ time_taken }}</span></p>
       </div>
