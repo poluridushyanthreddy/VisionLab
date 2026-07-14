@@ -103,4 +103,4 @@ def pointcloud(rgb_path,depth_path,folder):
             pcd
         )
 
-    return f'{name_without_ext}.jpg', inference_time, name_without_ext
+    return f'{name_without_ext}.jpg', f'{inference_time} ms', name_without_ext

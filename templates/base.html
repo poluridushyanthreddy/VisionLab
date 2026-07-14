@@ -356,6 +356,22 @@
     .results-hint a:hover {
       color: #ffffff;
     }
+
+    .dropdown-menu {
+      background-color: #1a1a1a;
+      border: 1px solid #2a2a2a;
+    }
+
+    .dropdown-item {
+      color: #aaaaaa;
+      font-size: 0.9rem;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+      background-color: #222222;
+      color: #ffffff;
+    }
   </style>
 
   {% block head %}{% endblock head %}
@@ -378,14 +394,31 @@
             <a class="nav-link" href="/detection">Detection</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/depth">Depth Estimation</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link" href="/pointcloud">Point Cloud</a>
           </li>
           <li class="nav-item">
             <a class="nav-link" href="/results">Results</a>
           </li>
+
+          {% if current_user.is_authenticated %}
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
+               data-bs-toggle="dropdown" aria-expanded="false">
+              {{ current_user.username }}
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+              <li><a class="dropdown-item" href="{{ url_for('logout') }}">Log out</a></li>
+            </ul>
+          </li>
+          {% else %}
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('login') }}">Log in</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('signup') }}">Sign up</a>
+          </li>
+          {% endif %}
+
         </ul>
       </div>
     </div>

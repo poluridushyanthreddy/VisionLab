@@ -6,7 +6,13 @@
   <h1>{{title}}</h1>
   <p>Extract point clouds of individual objects in an image using Segmentation.</p>
   <div class="upload-card">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <p class="meta-text" style="color:#cc6666; margin-bottom:1.25rem;">{{ messages[0] }}</p>
+    {% endif %}
+    {% endwith %}
     <form id="pointcloudForm" action="/cloudupload" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label for="model-select">Model</label>
       <select class="vl-select" id="model-select" name="model" required>
         <option value="" selected disabled>Select a model…</option>
@@ -47,8 +53,8 @@
       <div class="spinner-border spinner-border-sm" role="status"></div>
       <span>Processing…</span>
     </div>
-</div>
-<div class="results-hint">
+  </div>
+  <div class="results-hint">
     <a href="/results">View past results →</a>
   </div>
 </div>

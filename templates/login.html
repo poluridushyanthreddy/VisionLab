@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Log In{% endblock title %}
+
+{% block body %}
+<div class="hero">
+  <h1>Welcome back</h1>
+  <p>Log in to continue to VisionLab</p>
+
+  <div class="upload-card">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="meta-text" style="color:#cc6666; margin-bottom:1.25rem;">{{ messages[0] }}</p>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      {{ form.hidden_tag() }}
+
+      {{ form.identifier.label }}
+      {{ form.identifier(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="you@example.com", autofocus=true) }}
+      {% for error in form.identifier.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.password.label }}
+      {{ form.password(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="••••••••") }}
+      {% for error in form.password.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.submit(class_="vl-btn") }}
+    </form>
+
+    <p class="results-hint">Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+  </div>
+</div>
+{% endblock body %}

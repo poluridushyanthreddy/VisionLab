@@ -81,7 +81,7 @@
             <div class="d-flex gap-2">
                 <button onclick="loadCloud('{{ file.url }}', this.closest('.pc-item'))"
                     class="btn-delete btn-action">View</button>
-                <a href="/deleteptcloud/{{ file.url }}/{{id}}" class="btn-delete">Delete</a>
+                <a href="{{ url_for('deleteptcloud', id=id, filename=file.name) }}" class="btn-delete">Delete</a>
             </div>
         </div>
         {% endfor %}

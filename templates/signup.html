@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Sign Up{% endblock title %}
+
+{% block body %}
+<div class="hero">
+  <h1>Create your account</h1>
+  <p>Get started with VisionLab</p>
+
+  <div class="upload-card">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="meta-text" style="color:#cc6666; margin-bottom:1.25rem;">{{ messages[0] }}</p>
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('signup') }}">
+      {{ form.hidden_tag() }}
+
+      {{ form.username.label }}
+      {{ form.username(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="janedoe", autofocus=true) }}
+      {% for error in form.username.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.email.label }}
+      {{ form.email(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="you@example.com") }}
+      {% for error in form.email.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.password.label }}
+      {{ form.password(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="••••••••") }}
+      {% for error in form.password.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.confirm_password.label }}
+      {{ form.confirm_password(class_="vl-select", style="background-image:none; padding-right:0.85rem;", placeholder="••••••••") }}
+      {% for error in form.confirm_password.errors %}
+        <p class="meta-text" style="color:#cc6666;">{{ error }}</p>
+      {% endfor %}
+
+      {{ form.submit(class_="vl-btn") }}
+    </form>
+
+    <p class="results-hint">Already have an account? <a href="{{ url_for('login') }}">Log in</a></p>
+  </div>
+</div>
+{% endblock body %}

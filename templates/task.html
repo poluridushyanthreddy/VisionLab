@@ -8,7 +8,13 @@
   <p>Upload an image and run a vision model.</p>
 
   <div class="upload-card">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <p class="meta-text" style="color:#cc6666; margin-bottom:1.25rem;">{{ messages[0] }}</p>
+    {% endif %}
+    {% endwith %}
     <form id="analyzeForm" action="/upload" method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
       <label for="model-select">Model</label>
       <select class="vl-select" id="model-select" name="model" required>
