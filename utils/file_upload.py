@@ -10,10 +10,12 @@ def upload(file,folder):
 
 def delete(filename1,folder):
     filepath=os.path.join(folder,filename1)
-    os.remove(filepath)
+    if os.path.exists(filepath):
+        os.remove(filepath)
 
 def deletefolder(directory,foldername):
     filepath=os.path.join(directory,'pointclouds',foldername)
-    shutil.rmtree(filepath)
+    if os.path.isdir(filepath):
+        shutil.rmtree(filepath)
     
     

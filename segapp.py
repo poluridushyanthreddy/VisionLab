@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for,flash
+from flask import Flask, render_template, request, redirect, url_for,flash,session
 import os,secrets
 from services.model_registry import MODELS
 from utils import file_upload
@@ -118,9 +118,11 @@ def signup():
         )
         db.session.add(user)
         db.session.commit()
+        login_user(user)  
+        claimed = claim_pending_result(user)
  
-        flash("Account created. Please log in.")
-        return redirect(url_for("login"))
+        flash("Account created. Your result has been saved to your account." if claimed else "Account created.")
+        return redirect(url_for("index"))
  
     return render_template("signup.html", form=form)
 
@@ -142,6 +144,7 @@ def login():
             db.session.commit()
  
             login_user(user)
+            claim_pending_result(user)
             return redirect(url_for("index"))
  
         flash("Invalid username/email or password.")
@@ -155,7 +158,6 @@ def segmentation():
     "DeepLabV3": "DeeplabV3"})
 
 @segapp.route('/pointcloud')
-@login_required
 def pointcloud():
     return render_template('pointcloud.html',title="PointCloud",
     models={"PointCloud": "Yolo",})
@@ -180,7 +182,7 @@ def display(original, output,time_taken):
 def upload():
     if request.method == 'POST':
         model = request.form.get("model")
-        if model not in MODELS:
+        if model not in MODELS or MODELS[model]["task"] not in ("Segmentation", "Detection"):
             flash("Invalid model selected.")
             return redirect(request.referrer or url_for('segmentation'))
  
@@ -189,7 +191,7 @@ def upload():
             flash("No file selected.")
             return redirect(request.referrer or url_for('segmentation'))
  
-        extension = os.path.splitext(file.filename)[1]
+        extension = os.path.splitext(file.filename)[1].lower()
         if extension not in extensions:
             flash("Unsupported file format.")
             return redirect(request.referrer or url_for('segmentation'))
@@ -199,7 +201,11 @@ def upload():
             return redirect(request.referrer or url_for('segmentation'))
  
         filepath, filename = file_upload.upload(file, os.path.join(upload_folder, 'images', 'original'))
-        output_filename, time_taken = MODELS[model]["function"](filepath, os.path.join(upload_folder, 'images'))
+        try:
+            output_filename, time_taken = MODELS[model]["function"](filepath, os.path.join(upload_folder, 'images'))
+        except Exception:
+            flash("Something went wrong processing that image. Please try a different file.")
+            return redirect(request.referrer or url_for('segmentation'))
  
         # Only persist to DB if the user is logged in
         if current_user.is_authenticated:
@@ -213,6 +219,15 @@ def upload():
             )
             db.session.add(task)
             db.session.commit()
+        else:
+            session['pending_result'] = {
+                'type': 'image',
+                'model': model,
+                'model_cat': MODELS[model]["task"],
+                'original': filename,
+                'output': output_filename,
+                'inf_time': time_taken,
+            }
  
         return redirect(url_for('display', original=filename, output=output_filename, time_taken=time_taken))
 
@@ -220,7 +235,7 @@ def upload():
 def cloud():
     if request.method == 'POST':
         model = request.form.get("model")
-        if model not in MODELS:
+        if model not in MODELS or MODELS[model]["task"] != "PointCloud":
             flash("Invalid model selected.")
             return redirect(request.referrer or url_for('pointcloud'))
  
@@ -230,8 +245,8 @@ def cloud():
             flash("Please select both an image and a depth image.")
             return redirect(request.referrer or url_for('pointcloud'))
  
-        extension1 = os.path.splitext(file1.filename)[1]
-        extension2 = os.path.splitext(file2.filename)[1]
+        extension1 = os.path.splitext(file1.filename)[1].lower()
+        extension2 = os.path.splitext(file2.filename)[1].lower()
         for ext in [extension1, extension2]:
             if ext not in extensions:
                 flash("Unsupported file format.")
@@ -243,9 +258,12 @@ def cloud():
  
         filepath2, filename2 = file_upload.upload(file2, os.path.join(upload_folder, 'images', 'depth'))
         filepath1, filename1 = file_upload.upload(file1, os.path.join(upload_folder, 'images', 'original'))
-        output_filename, time_taken, folder = MODELS[model]["function"](
-            filepath1, filepath2, os.path.join(upload_folder, 'images')
-        )
+        try:
+            output_filename, time_taken, folder = MODELS[model]["function"](
+                filepath1, filepath2, os.path.join(upload_folder, 'images'))
+        except Exception:
+            flash("Something went wrong processing those images. Please try different files.")
+            return redirect(request.referrer or url_for('pointcloud'))
  
         if current_user.is_authenticated:
             task = IVPlatform(
@@ -260,8 +278,19 @@ def cloud():
             )
             db.session.add(task)
             db.session.commit()
- 
-        return redirect(url_for('display', original=filename1, output=output_filename, time_taken=time_taken))
+            return redirect(url_for('viewer', id=task.id))
+        
+        session['pending_result'] = {
+            'type': 'pointcloud',
+            'model': model,
+            'model_cat': MODELS[model]["task"],
+            'original': filename1,
+            'depth': filename2,
+            'output': output_filename,
+            'inf_time': time_taken,
+            'folder': folder,
+        }
+        return redirect(url_for('viewer_session', folder=folder))
     
 
 @segapp.route('/delete/<int:id>')
@@ -318,6 +347,44 @@ def viewer(id):
                 "name": file,
                 "url": f"/static/pointclouds/{task.folder}/{file}"    })
     return render_template('object-viewer.html',files=pointclouds,id=id)
+
+@segapp.route('/objectviewer/session/<path:folder>')
+def viewer_session(folder):
+    pc_root = os.path.abspath(os.path.join(upload_folder, 'pointclouds'))
+    target_folder = os.path.abspath(os.path.join(pc_root, folder)) 
+    # in case `folder` ever gets tampered with in the URL directly.
+    if not target_folder.startswith(pc_root + os.sep) or not os.path.isdir(target_folder):
+        return "Not found", 404
+ 
+    pointclouds = []
+    for file in sorted(os.listdir(target_folder)):
+        if file.endswith(".ply"):
+            pointclouds.append({
+                "name": file,
+                "url": f"/static/pointclouds/{folder}/{file}"
+            })
+ 
+    # id=None tells the template this is an anon session — no delete button.
+    return render_template('object-viewer.html', files=pointclouds, id=None)
+
+def claim_pending_result(user):
+    pending = session.pop('pending_result', None)
+    if not pending:
+        return False
+ 
+    task = IVPlatform(
+        user_id=user.id,
+        model_cat=pending['model_cat'],
+        model_name=pending['model'],
+        original=pending['original'],
+        output=pending['output'],
+        inf_time=pending['inf_time'],
+        depth=pending.get('depth'),
+        folder=pending.get('folder'),
+    )
+    db.session.add(task)
+    db.session.commit()
+    return True
 
 @segapp.route("/logout")
 @login_required

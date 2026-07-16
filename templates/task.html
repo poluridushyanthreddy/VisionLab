@@ -67,6 +67,10 @@
       dropZone.classList.add('has-file');
     }
   });
+  document.getElementById('analyzeForm').addEventListener('submit', () => {
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('spinner').style.display = 'flex';
+  });
 </script>
 
 {% endblock body %}

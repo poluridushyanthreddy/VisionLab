@@ -72,6 +72,11 @@
     <div class="pc-sidebar">
         <div class="pc-sidebar-header">
             <p class="section-label mb-0">Point Clouds</p>
+            {% if not id %}
+            <p class="meta-text" style="margin-top:0.5rem;">
+              <a href="{{ url_for('signup') }}" class="btn-action">Sign up</a> to save your results.
+            </p>
+            {% endif %}
         </div>
 
         {% if files %}
@@ -81,7 +86,9 @@
             <div class="d-flex gap-2">
                 <button onclick="loadCloud('{{ file.url }}', this.closest('.pc-item'))"
                     class="btn-delete btn-action">View</button>
+                {% if id %}
                 <a href="{{ url_for('deleteptcloud', id=id, filename=file.name) }}" class="btn-delete">Delete</a>
+                {% endif %}
             </div>
         </div>
         {% endfor %}
@@ -150,7 +157,7 @@
             const radius = geometry.boundingSphere.radius;
 
             currentMesh = new THREE.Points(geometry, new THREE.PointsMaterial({
-                size: radius * 0.01,   // scale point size to cloud size
+                size: radius * 0.01,
                 vertexColors: true
             }));
             scene.add(currentMesh);
