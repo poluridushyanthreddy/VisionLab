@@ -398,4 +398,4 @@ def file_too_large(e):
     return redirect(request.referrer or url_for('index')), 413
 
 if __name__ == "__main__":    
-    segapp.run(debug=True)
+    segapp.run(debug=False)
