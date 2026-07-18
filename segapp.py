@@ -3,6 +3,7 @@ import os,secrets
 from services.model_registry import MODELS
 from utils import file_upload
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from wtforms import StringField,PasswordField,SubmitField
 from wtforms.validators import InputRequired,Length,ValidationError,Email,EqualTo
 from flask_wtf import CSRFProtect,FlaskForm
@@ -14,6 +15,7 @@ segapp = Flask(__name__)
 segapp.config['SQLALCHEMY_DATABASE_URI']='sqlite:///test.db'#database of type sqlite
 segapp.config["SECRET_KEY"] = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
 db=SQLAlchemy(segapp)
+migrate = Migrate(segapp, db)
 csrf = CSRFProtect(segapp)
 
 login_manager = LoginManager()
