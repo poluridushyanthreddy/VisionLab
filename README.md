@@ -4,7 +4,7 @@ A modular computer vision platform built with Flask. Upload an image, pick a mod
 
 **Live demo:** [http://4.213.227.190](http://4.213.227.190) — try it without signing up; sign up afterward to save your result.
 
-![Segmentation demo](./screenshots/segmentation.jpg)
+![Segmentation demo](./screenshots/segmentation.png)
 ![Point cloud viewer](./screenshots/pointcloud.png)
 
 ---
@@ -21,11 +21,11 @@ A modular computer vision platform built with Flask. Upload an image, pick a mod
 
 ## Tech Stack
 
-**Backend:** Flask, Flask-SQLAlchemy, Flask-Login, Flask-WTF, Flask-Migrate
-**ML/CV:** PyTorch (CPU-only), Ultralytics YOLO, DeepLabV3, OpenCV, Open3D
-**Database:** SQLite
-**Frontend:** HTML, CSS, vanilla JS, Three.js
-**Deployment:** Azure VM (Ubuntu), Gunicorn, Nginx, systemd
+- **Backend:** Flask, Flask-SQLAlchemy, Flask-Login, Flask-WTF, Flask-Migrate
+- **ML/CV:** PyTorch (CPU-only), Ultralytics YOLO, DeepLabV3, OpenCV, Open3D
+- **Database:** SQLite
+- **Frontend:** HTML, CSS, vanilla JS, Three.js
+- **Deployment:** Azure VM (Ubuntu), Gunicorn, Nginx, systemd
 
 ---
 
