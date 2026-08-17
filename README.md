@@ -2,8 +2,9 @@
 
 A modular computer vision platform built with Flask. Upload an image, pick a model, and get AI-powered results — segmentation, detection, or a 3D point cloud you can explore right in the browser.
 
-**Live demo:** [http://4.213.227.190](http://4.213.227.190) — try it without signing up; sign up afterward to save your result.
+> This was previously deployed live on Azure. The screenshots below are from that deployment — see [Local Setup](#local-setup) to run it yourself.
 
+![Demo walkthrough](./screenshots/demo.gif)
 ![Segmentation demo](./screenshots/segmentation.png)
 ![Point cloud viewer](./screenshots/pointcloud.png)
 
@@ -21,11 +22,11 @@ A modular computer vision platform built with Flask. Upload an image, pick a mod
 
 ## Tech Stack
 
-- **Backend:** Flask, Flask-SQLAlchemy, Flask-Login, Flask-WTF, Flask-Migrate
-- **ML/CV:** PyTorch (CPU-only), Ultralytics YOLO, DeepLabV3, OpenCV, Open3D
-- **Database:** SQLite
-- **Frontend:** HTML, CSS, vanilla JS, Three.js
-- **Deployment:** Azure VM (Ubuntu), Gunicorn, Nginx, systemd
+**Backend:** Flask, Flask-SQLAlchemy, Flask-Login, Flask-WTF, Flask-Migrate
+**ML/CV:** PyTorch (CPU-only), Ultralytics YOLO, DeepLabV3, OpenCV, Open3D
+**Database:** SQLite
+**Frontend:** HTML, CSS, vanilla JS, Three.js
+**Deployment:** Azure VM (Ubuntu), Gunicorn, Nginx, systemd
 
 ---
 
@@ -86,14 +87,6 @@ Visit `http://localhost:5000`.
 flask db migrate -m "describe the change"
 flask db upgrade
 ```
-
----
-
-## Known Limitations
-
-- SQLite over Postgres — fine at current scale, would need to change under real concurrent write load
-- No HTTPS — served over plain HTTP on a bare IP for demo purposes; not intended for production use with sensitive data as currently deployed
-- Single-server deployment, no load balancing
 
 ---
 
